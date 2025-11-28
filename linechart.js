@@ -28,16 +28,6 @@ const legendNames = {
     "PERCEPTION OF CORRUPTION MIN-MAX NORMALIZATION": "Corruption"
 };
 
-let icons = {
-    "HAPINESS SCORE": "assets/flor.png",
-    "GDP PER CAPITA": "assets/passaro.png",
-    "SOCIAL SUPPORT": "assets/passaro.png",
-    "HEALTHY LIFE EXPECTANCY": "assets/passaro.png",
-    "FREEDOM TO MAKE LIFE CHOICES": "assets/passaro.png",
-    "GENEROSITY": "assets/passaro.png",
-    "PERCEPTION OF CORRUPTION": "assets/passaro.png",
-};
-
 let svg = d3.select("#my_dataviz")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -68,7 +58,43 @@ to the Gallup World Poll (GWP) question:
     "PERCEPTION OF CORRUPTION": `is the average of binary answers to two GWP questions: “Is corruption widespread throughout the government or not?” and “Is corruption widespread within businesses or not?”`
 };
 
+// ESCALAS
+let x = d3.scaleLinear().domain([2015, 2024]).range([0, width]);
+let y = d3.scaleLinear().domain([0, 1]).range([height, 0]);
+let color = d3.scaleOrdinal().domain(parameters).range(d3.schemeCategory10);
 
+// EIXO X
+const xAxis = svg.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .attr("class", "x-axis")
+    .call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
+
+// EIXO Y
+const yAxis = svg.append("g")
+    .call(d3.axisLeft(y).tickSize(0).tickFormat(''));
+yAxis.select(".domain").remove();
+
+// FUNÇÕES TOOLTIP
+function handleMouseOver(event, d, param) {
+    const rawParam = param.replace(" MIN-MAX NORMALIZATION", "");
+    const rawValue = d[rawParam];
+    const description = paramDescriptions[rawParam] || "Sem descrição disponível.";
+    tooltip
+        .style("opacity", 1)
+        .html(`<strong>${rawParam}</strong><br><strong>Valor original:</strong> ${rawValue ?? "N/A"}<br><br><em>${description.replace(/\n/g, "<br>")}</em>`);
+}
+
+function handleMouseMove(event) {
+    tooltip
+        .style("left", event.pageX + 10 + "px")
+        .style("top", event.pageY + 10 + "px");
+}
+
+function handleMouseOut() {
+    tooltip.style("opacity", 0);
+}
+
+// DADOS
 d3.csv("dataset-ukrain.csv").then(function(data) {
 
     data.forEach(d => {
@@ -76,17 +102,12 @@ d3.csv("dataset-ukrain.csv").then(function(data) {
         parameters.forEach(p => d[p] = d[p] === "" || d[p] === undefined ? 0 : +d[p]);
     });
 
-    let x = d3.scaleLinear().domain([2015, 2024]).range([0, width]);
-    let y = d3.scaleLinear().domain([0, 1]).range([height, 0]);
-    let color = d3.scaleOrdinal().domain(parameters).range(d3.schemeCategory10);
-
-    // ----------------------------
-    // LINES + CIRCLES INICIAIS
-    // ----------------------------
+    // LINHAS E PONTOS
     let lines = [];
     let pointsGroups = [];
 
     parameters.forEach((param, i) => {
+        let pointsGroupG = svg.append("g").attr("class", "pointsGroup_" + i);
 
         let line = svg.append("path")
             .datum(data)
@@ -98,188 +119,100 @@ d3.csv("dataset-ukrain.csv").then(function(data) {
             .attr("d", d3.line()
                 .x(d => x(d.YEAR))
                 .y(d => y(d[param]))
-            ).on('click',function(abc){
-                console.log("Olá", abc);
-            });//adicionar on na função de click
+            );
 
-let points = svg.selectAll(`circle_${i}`)
-.data(data)
-.enter()
-.append("circle")
-.attr("class", "circle_" + i)
-.attr("cx", d => x(d.YEAR))
-.attr("cy", d => y(d[param]))
-.attr("r", 5)
-.attr("fill", color(param))
-.attr("fill-opacity", 0.2)
-.style("cursor", "pointer")
-
-.on("mouseover", function (event, d) {
-
-    const rawParam = param.replace(" MIN-MAX NORMALIZATION", "");
-    const rawValue = d[rawParam];
-    const description = paramDescriptions[rawParam] || "Sem descrição disponível.";
-
-    tooltip
-        .style("opacity", 1)
-        .html(`
-            <strong>${rawParam}</strong><br>
-            <strong>Valor original:</strong> ${rawValue ?? "N/A"}<br><br>
-            <em>${description.replace(/\n/g, "<br>")}</em>
-        `);
-})
-.on("mousemove", function (event) {
-    tooltip
-        .style("left", event.pageX + 10 + "px")
-        .style("top", event.pageY + 10 + "px");
-})
-.on("mouseout", function () {
-    tooltip.style("opacity", 0);
-})
-.on("click", function (event, d) {
-    const layerId = param + "_" + d.YEAR;
-
-    if (selectedParams.has(layerId)) {
-        selectedParams.delete(layerId);
-        radarLayers = radarLayers.filter(l => l.id !== layerId);
-    } else {
-        selectedParams.add(layerId);
-        radarLayers.push({ id: layerId, param, year: d.YEAR, data: d });
-    }
-
-    // Atualiza opacidades
-    parameters.forEach((p, j) => {
-        const anySelected = selectedParams.size > 0;
-        const isSelected = [...selectedParams].some(id => id.startsWith(p));
-
-        d3.select(".line_" + j)
-            .attr("stroke-opacity", anySelected ? (isSelected ? 1 : 0.1) : 0.2);
-
-        d3.selectAll(".circle_" + j)
-            .attr("fill-opacity", anySelected ? (isSelected ? 1 : 0.1) : 0.2);
-    });
-
-    updateRadarForYears(radarLayers.map(l => l.data));
-});
-
+        pointsGroupG.selectAll("circle")
+            .data(data, d => d.YEAR)
+            .enter()
+            .append("circle")
+            .attr("cx", d => x(d.YEAR))
+            .attr("cy", d => y(d[param]))
+            .attr("r", 5)
+            .attr("fill", color(param))
+            .attr("fill-opacity", 0.2)
+            .style("cursor", "pointer")
+            .on("mouseover", (event, d) => handleMouseOver(event, d, param))
+            .on("mousemove", handleMouseMove)
+            .on("mouseout", handleMouseOut);
 
         lines.push({ path: line, param });
-        pointsGroups.push({ circles: points, param });
+        pointsGroups.push({ group: pointsGroupG, param });
     });
 
-    // ----------------------------
-    // RADAR CHART
-    // ----------------------------
-    updateRadarForYears(data);
-
-    // ----------------------------
-    // EIXOS
-    // ----------------------------
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
-
-        const yAxis = svg.append("g")
-        .call(
-            d3.axisLeft(y)
-                .tickSize(0)
-                .tickFormat('')   // hide numbers
-        );
-    
-    // REMOVE the vertical axis line
-    yAxis.select(".domain").remove();
-
-    // ----------------------------
     // LEGENDA
-    // ----------------------------
     const legend = svg.append("g")
         .attr("class", "legend")
         .attr("transform", `translate(${width - 100}, 20)`);
 
     parameters.forEach((param, i) => {
-        const g = legend.append("g")
-            .attr("transform", `translate(0, ${i * 20})`);
-
-        g.append("rect")
-            .attr("width", 12)
-            .attr("height", 12)
-            .attr("fill", color(param));
-
-        g.append("text")
-            .attr("x", 18)
-            .attr("y", 10)
-            .style("font-size", "12px")
+        const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
+        g.append("rect").attr("width", 12).attr("height", 12).attr("fill", color(param));
+        g.append("text").attr("x", 18).attr("y", 10).style("font-size", "12px")
             .text(legendNames[param] || param);
     });
 
-    // ----------------------------
-    // PLAY BUTTON
-    // ----------------------------
-    document.getElementById("playBtn").onclick = () => {
-        let playIndex = 0;
-        radarLayers = [];
-        selectedParams.clear();
+    // RADAR INICIAL
+    updateRadarForYears(data);
 
-        const years = [...new Set(data.map(d => d.YEAR))].sort((a, b) => a - b);
+    // FUNÇÃO BACKGROUND
+    function updateBackgroundHighlight(startYear, endYear) {
+        const xStart = x(startYear);
+        const xEnd = x(endYear);
+    }
 
-        function animateNextYear() {
-            if (playIndex >= years.length) {
-                selectedParams.clear();
-                radarLayers = [];
-                const fakeLegendData = [{ YEAR: "—", ...Object.fromEntries(parameters.map(p => [p, 0])) }];
-                updateRadarForYears(fakeLegendData);
-            
-                parameters.forEach((p, j) => {
-                    d3.select(".line_" + j).attr("stroke-opacity", 0.2);
-                    d3.selectAll(".circle_" + j).attr("fill-opacity", 0.2);
-                });
-                return;
-            }
-            
+    // FILTRO PELO SELECT
+    const yearSelect = document.getElementById("varSelect");
+    yearSelect.addEventListener("change", function() {
+        const selectedValue = this.value;
+        const [startYear, endYear] = selectedValue.split("-").map(d => +d);
 
-            const year = years[playIndex];
-            const yearData = data.filter(d => d.YEAR === year);
+        const filteredData = data.filter(d => d.YEAR >= startYear && d.YEAR <= endYear);
 
-            parameters.forEach((param, i) => {
-                const lineObj = lines[i];
-                const pts = pointsGroups[i];
+        // Atualiza escala X
+        x.domain([startYear, endYear]);
 
-                const segmentData = data.slice(0, playIndex + 1).map(d => ({
-                    x: x(d.YEAR), y: y(d[param])
-                }));
+        // Atualiza eixo X
+        xAxis.transition()
+            .duration(500)
+            .call(d3.axisBottom(x).ticks(endYear - startYear + 1).tickFormat(d3.format("d")));
 
-                const tempLine = d3.line()
-                    .x(d => d.x)
-                    .y(d => d.y);
+        // Atualiza linhas e pontos
+        parameters.forEach((param, i) => {
+            const lineObj = lines[i];
+            const pointsGroup = pointsGroups[i];
 
-                lineObj.path.transition()
-                    .duration(900)
-                    .attr("d", tempLine(segmentData))
-                    .attr("stroke-opacity", 1);
+            lineObj.path.datum(filteredData)
+                .transition()
+                .duration(500)
+                .attr("d", d3.line()
+                    .x(d => x(d.YEAR))
+                    .y(d => y(d[param]))
+                );
 
-                pts.circles.filter((d, idx) => idx === playIndex)
-                    .transition()
-                    .duration(250)
-                    .attr("fill-opacity", 1);
+            pointsGroup.group.selectAll("circle")
+                .data(filteredData, d => d.YEAR)
+                .join(
+                    enter => enter.append("circle")
+                                  .attr("cx", d => x(d.YEAR))
+                                  .attr("cy", d => y(d[param]))
+                                  .attr("r", 5)
+                                  .attr("fill", color(param))
+                                  .attr("fill-opacity", 0.2)
+                                  .style("cursor", "pointer")
+                                  .on("mouseover", (event, d) => handleMouseOver(event, d, param))
+                                  .on("mousemove", handleMouseMove)
+                                  .on("mouseout", handleMouseOut),
+                    update => update.transition().duration(500)
+                                    .attr("cx", d => x(d.YEAR))
+                                    .attr("cy", d => y(d[param])),
+                    exit => exit.remove()
+                );
+        });
 
-                const layerId = param + "_" + year;
-                if (!selectedParams.has(layerId)) {
-                    selectedParams.add(layerId);
-                    radarLayers.push({
-                        id: layerId,
-                        param,
-                        year,
-                        data: yearData.find(d => d[param] !== undefined)
-                    });
-                }
-            });
+        // Atualiza radar chart
+        updateRadarForYears(filteredData);
 
-            updateRadarForYears(radarLayers.map(l => l.data));
-
-            playIndex++;
-            setTimeout(animateNextYear, 1000);
-        }
-
-        animateNextYear();
-    };
+        // Atualiza background
+        updateBackgroundHighlight(startYear, endYear);
+    });
 });
