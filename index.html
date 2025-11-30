@@ -9,16 +9,23 @@
 <body>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <h1>War and Wellbeing <br> in Ukraine</h1>
-    <h1>Radar Chart all years</h1>
-    <div class="radarChart"></div>
-    <h1>Linear chart along time</h1>
-    <select id="yearSelect">
+    <aside>
+      <a href="#radar">Radar</a>
+      <a href="#my_dataviz">Linear</a>
+      <a href="#dotplot_chart1">ranking</a>
+      <a href="#dotplot_chart2">dotplot</a>
+      <p>Filters</p>
+          <select id="yearSelect">
       <option value="2015-2024">All</option>
       <option value="2020-2023">Covid-19 (2020)</option>
       <option value="2022-2024">Invasão da Ucrânia</option>
       <option value="2016-2020">Crise económica</option>
       <option value="2018-2020">Construção da ponte da Crimeia</option>
     </select>
+    </aside>
+    <h1>Radar Chart all years</h1>
+    <div id="radar" class="radarChart"></div>
+    <h1>Linear chart along time</h1>
     <div id="my_dataviz"></div>
     <button id="playBtn">▶ Play</button>
     <h1>Compare to best/worst country</h1>
