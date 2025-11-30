@@ -15,6 +15,17 @@ export function createLineChart(width, height, margin, animation = true) {
         "GENEROSITY MIN-MAX NORMALIZATION",
         "PERCEPTION OF CORRUPTION MIN-MAX NORMALIZATION"
     ];
+    // Mapear parâmetro normalizado -> coluna original do CSV
+const rawValueColumn = {
+    "HAPPINESS SCORE": "HAPPINESS SCORE",
+    "GDP PER CAPITA (Billions)": "GDP PER CAPITA (Billions)",
+    "SOCIAL SUPPORT": "SOCIAL SUPPORT",
+    "HEALTHY LIFE EXPECTANCY": "HEALTHY LIFE EXPECTANCY",
+    "FREEDOM TO MAKE LIFE CHOICES": "FREEDOM TO MAKE LIFE CHOICES",
+    "GENEROSITY": "GENEROSITY",
+    "PERCEPTION OF CORRUPTION": "PERCEPTION OF CORRUPTION"
+};
+
 
     const legendNames = {
         "HAPPINESS SCORE MIN-MAX NORMALIZATION": "Happiness",
@@ -44,17 +55,17 @@ export function createLineChart(width, height, margin, animation = true) {
         .style("opacity", 0);
 
     const paramDescriptions = {
-    "HAPPINESS SCORE": "Overall happiness score based on survey responses and statistical modeling.",
-    "GDP PER CAPITA (Billions)": `GDP per capita is measured in PPP-adjusted constant 2021 international dollars, based on World Bank WDI data. The model uses the natural log of GDP per capita, which fits the data better.`,
-    "SOCIAL SUPPORT": `Social support is the national average of the binary responses (0=no, 1=yes) 
+        "HAPPINESS SCORE": "Overall happiness score based on survey responses and statistical modeling.",
+        "GDP PER CAPITA (Billions)": `GDP per capita is measured in PPP-adjusted constant 2021 international dollars, based on World Bank WDI data. The model uses the natural log of GDP per capita, which fits the data better.`,
+        "SOCIAL SUPPORT": `Social support is the national average of the binary responses (0=no, 1=yes) 
 to the Gallup World Poll (GWP) question: 
 “If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?”`,
-    "HEALTHY LIFE EXPECTANCY": "Healthy life expectancy at birth, based on WHO estimates.",
-    "FREEDOM TO MAKE LIFE CHOICES": `is the national average of binary responses
+        "HEALTHY LIFE EXPECTANCY": "Healthy life expectancy at birth, based on WHO estimates.",
+        "FREEDOM TO MAKE LIFE CHOICES": `is the national average of binary responses
      to the GWP question “Are you satisfied or dissatisfied with your freedom to choose what you do with your life?”`,
-    "GENEROSITY": `is the residual from regressing the national average of GWP responses to the donation question “Have you donated money to a charity in the past month?” on log GDP per capita.`,
-    "PERCEPTION OF CORRUPTION": `is the average of binary answers to two GWP questions: “Is corruption widespread throughout the government or not?” and “Is corruption widespread within businesses or not?”`
-};
+        "GENEROSITY": `is the residual from regressing the national average of GWP responses to the donation question “Have you donated money to a charity in the past month?” on log GDP per capita.`,
+        "PERCEPTION OF CORRUPTION": `is the average of binary answers to two GWP questions: “Is corruption widespread throughout the government or not?” and “Is corruption widespread within businesses or not?”`
+    };
 
     let x = d3.scaleLinear().domain([2015, 2024]).range([0, width]);
     let y = d3.scaleLinear().domain([0, 1]).range([height, 0]);
@@ -70,13 +81,23 @@ to the Gallup World Poll (GWP) question:
     yAxis.select(".domain").remove();
 
     function handleMouseOver(event, d, param) {
-        const rawParam = param.replace(" MIN-MAX NORMALIZATION", "");
-        const rawValue = d[rawParam];
-        const description = paramDescriptions[rawParam] || "Sem descrição disponível.";
-        tooltip
-            .style("opacity", 1)
-            .html(`<strong>${rawParam}</strong><br><strong>Valor original:</strong> ${rawValue ?? "N/A"}<br><br><em>${description.replace(/\n/g, "<br>")}</em>`);
-    }
+    const rawParam = param.replace(" MIN-MAX NORMALIZATION", "");
+
+    // coluna com o valor real
+    const rawColumn = rawValueColumn[rawParam];
+
+    const rawValue = d[rawColumn];
+    const normalizedValue = d[param];
+
+    tooltip
+        .style("opacity", 1)
+        .html(`
+            <strong>${rawParam}</strong><br>
+            <strong>Valor real:</strong> ${rawValue ?? "N/A"}<br>
+            <strong>Normalizado:</strong> ${normalizedValue?.toFixed(3) ?? "N/A"}
+        `);
+}
+
 
     function handleMouseMove(event) {
         tooltip
@@ -88,7 +109,6 @@ to the Gallup World Poll (GWP) question:
         tooltip.style("opacity", 0);
     }
 
-    // LOAD CSV
     d3.csv("dataset-ukrain.csv").then(function (data) {
 
         data.forEach(d => {
@@ -101,7 +121,6 @@ to the Gallup World Poll (GWP) question:
         let activeLines = {};
         parameters.forEach(p => activeLines[p] = false);
 
-        // DRAW LINES + POINTS
         parameters.forEach((param, i) => {
             let pointsGroupG = svg.append("g").attr("class", "pointsGroup_" + i);
 
@@ -135,15 +154,19 @@ to the Gallup World Poll (GWP) question:
             pointsGroups.push({ group: pointsGroupG, param });
         });
 
-        // LEGEND
         const legend = svg.append("g")
             .attr("class", "legend")
             .attr("transform", `translate(${width - 100}, 20)`);
 
         parameters.forEach((param, i) => {
+
+            const rawParam = param.replace(" MIN-MAX NORMALIZATION", "");
+            const description = paramDescriptions[rawParam] || "Sem descrição disponível.";
+
             const g = legend.append("g")
                 .attr("transform", `translate(0, ${i * 20})`)
                 .style("cursor", "pointer")
+                // CLICK (mostrar/esconder linha)
                 .on("click", function () {
 
                     activeLines[param] = !activeLines[param];
@@ -164,6 +187,20 @@ to the Gallup World Poll (GWP) question:
                         .transition()
                         .duration(animation ? 300 : 0)
                         .attr("fill-opacity", activeLines[param] ? 1 : 0.2);
+                })
+                // TOOLTIP NA LENDA (NOVO)
+                .on("mouseover", (event) => {
+                    tooltip
+                        .style("opacity", 1)
+                        .html(`<strong>${rawParam}</strong><br><br>${description.replace(/\n/g, "<br>")}`);
+                })
+                .on("mousemove", (event) => {
+                    tooltip
+                        .style("left", event.pageX + 10 + "px")
+                        .style("top", event.pageY + 10 + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.style("opacity", 0);
                 });
 
             g.append("rect")
@@ -232,10 +269,6 @@ to the Gallup World Poll (GWP) question:
             updateRadarForYears(filteredData);
         });
 
-        // =============================================================
-        //                    TIMELINE PLAY ANIMATION
-        // =============================================================
-
         const playBtn = document.getElementById("playBtn");
         let playing = false;
         let playInterval = null;
@@ -243,7 +276,6 @@ to the Gallup World Poll (GWP) question:
         const years = [...new Set(data.map(d => d.YEAR))].sort((a, b) => a - b);
         let currentYearIndex = 0;
 
-        // mostrar dados acumulados até year com transição suave
         function updateLineChartToYear(targetYear) {
             const partialData = data.filter(d => d.YEAR <= targetYear);
 
@@ -251,7 +283,6 @@ to the Gallup World Poll (GWP) question:
                 const lineObj = lines[i];
                 const pointsGroup = pointsGroups[i];
 
-                // Anima o path com transição suave
                 lineObj.path.datum(partialData)
                     .transition()
                     .duration(animation ? 600 : 0)
@@ -261,7 +292,6 @@ to the Gallup World Poll (GWP) question:
                         .y(d => y(d[param]))
                     );
 
-                // Atualiza pontos com transição suave
                 pointsGroup.group.selectAll("circle")
                     .data(partialData, d => d.YEAR)
                     .join(
@@ -286,28 +316,23 @@ to the Gallup World Poll (GWP) question:
             });
         }
 
-
         function startTimelineAnimation() {
             playing = true;
             playBtn.textContent = "⏸ Pause";
 
-            // começa no primeiro ano (2015)
             currentYearIndex = 0;
-
-            // mostra dados acumulados começando do primeiro ano
             updateLineChartToYear(years[0]);
 
-            // incrementa o índice e mostra próximo ano a cada intervalo
             playInterval = setInterval(() => {
                 currentYearIndex++;
 
                 if (currentYearIndex >= years.length) {
-                    // chegou ao fim (2024), reinicia do início
-                    currentYearIndex = 0;
+                    stopTimelineAnimation(); // ← AQUI: AGORA PARA NO FIM
+                    return;
                 }
 
                 updateLineChartToYear(years[currentYearIndex]);
-            }, 800);  // cada ano leva 800ms para aparecer
+            }, 800);
         }
 
         function stopTimelineAnimation() {
@@ -323,6 +348,7 @@ to the Gallup World Poll (GWP) question:
 
     });
 }
+
 
 // ---- CALL THE FUNCTION ----
 createLineChart(
