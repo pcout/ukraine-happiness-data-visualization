@@ -8,6 +8,11 @@
 </head>
 <body>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <header>
+      <nav>
+      </nav>
+      <button id="collapsed">↓</button>
+    </header>
     <h1>War and Wellbeing <br> in Ukraine</h1>
     <aside>
       <a href="#radar">Radar</a>
@@ -17,14 +22,21 @@
       <p>Filters</p>
           <select id="yearSelect">
       <option value="2015-2024">All</option>
-      <option value="2020-2023">Covid-19 (2020)</option>
-      <option value="2022-2024">Invasão da Ucrânia</option>
-      <option value="2016-2020">Crise económica</option>
-      <option value="2018-2020">Construção da ponte da Crimeia</option>
+      <option value="2015">2015</option>
+      <option value="2016">2016</option>
+      <option value="2017">2017</option>
+      <option value="2018">2018</option>
+      <option value="2019">2019</option>
+      <option value="2020">2020</option>
+      <option value="2021">2021</option>
+      <option value="2022">2022</option>
+      <option value="2023">2023</option>
+      <option value="2024">2024</option>
     </select>
     </aside>
     <h1>Radar Chart all years</h1>
     <div id="radar" class="radarChart"></div>
+    <div id="radar2" class="radarChart"></div>
     <h1>Linear chart along time</h1>
     <div id="my_dataviz"></div>
     <button id="playBtn">▶ Play</button>
@@ -48,5 +60,6 @@
       
     <script src="dotplot.js" type="module"></script>
     <script   type="module" src="linechart.js"></script>
+    <script   type="module" src="radarChart.js"></script>
 </body>
 </html>

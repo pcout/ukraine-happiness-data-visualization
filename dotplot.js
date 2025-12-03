@@ -145,7 +145,8 @@ Promise.all([
 
   // SELECT DE ANOS
   d3.select("#yearSelect").on("change", function() {
-    currentRange = this.value.split("-").map(Number);
+    const parts = this.value.split("-").map(Number);
+    currentRange = parts.length === 2 ? parts : [parts[0], parts[0]];
     chart1.update(currentVar, currentRange);
     chart2.update(currentVar, currentRange);
   });
