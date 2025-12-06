@@ -1,5 +1,8 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
+// Track if legend has been created
+let legendCreated = false;
+
 function createDotPlot(containerId, columnName, yDescending = true, bestData, worstData, ukrainData) {
   const margin = { top: 30, right: 30, bottom: 70, left: 60 },
         width = 500 - margin.left - margin.right,
@@ -31,6 +34,41 @@ function createDotPlot(containerId, columnName, yDescending = true, bestData, wo
       .style("opacity", 0);
 
   const colors = ["#ff7f0e", "#1f77b4", "#2ca02c"];
+  
+  // Create legend only once in the designated div
+  if (!legendCreated) {
+    const legendContainer = d3.select(".dot-plot-legend");
+    if (!legendContainer.empty()) {
+      const legendItems = [
+        { label: "Best Country", color: colors[0] },
+        { label: "Worst Country", color: colors[1] },
+        { label: "Ukraine", color: colors[2] }
+      ];
+      
+      const legendSvg = legendContainer.append("svg")
+        .attr("width", 400)
+        .attr("height", 30);
+      
+      const legend = legendSvg.selectAll(".legend-item")
+        .data(legendItems)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(${i * 130}, 10)`);
+      
+      legend.append("circle")
+        .attr("r", 6)
+        .attr("fill", d => d.color);
+      
+      legend.append("text")
+        .attr("x", 12)
+        .attr("y", 4)
+        .style("font-size", "14px")
+        .text(d => d.label);
+      
+      legendCreated = true;
+    }
+  }
 
   function update(columnName, yearRange = [2015, 2024]) {
 
@@ -131,24 +169,33 @@ Promise.all([
   d3.csv("dataset-ukrain.csv")
 ]).then(([best, worst, ukrain]) => {
 
-  let currentVar = "HAPPINESS SCORE";
   let currentRange = [2015, 2024];
 
-  const chart1 = createDotPlot("#dotplot_chart1", currentVar, true, best, worst, ukrain);
-  const chart2 = createDotPlot("#dotplot_chart2", currentVar, false, best, worst, ukrain);
+  // Create chart1 (ranking with first variable)
+  const chart1 = createDotPlot("#dotplot_chart1", "HAPPINESS SCORE", true, best, worst, ukrain);
 
-  // SELECT DE VARIÁVEL
-  d3.select("#varSelect").on("change", function() {
-    currentVar = this.value;
-    chart2.update(currentVar, currentRange);
-  });
+  // Create all 7 variable charts
+  const chartHappiness = createDotPlot("#dotplot_happiness", "HAPPINESS SCORE", false, best, worst, ukrain);
+  const chartGdp = createDotPlot("#dotplot_gdp", "GDP PER CAPITA (Billions)", false, best, worst, ukrain);
+  const chartSocial = createDotPlot("#dotplot_social", "SOCIAL SUPPORT", false, best, worst, ukrain);
+  const chartHealth = createDotPlot("#dotplot_health", "HEALTHY LIFE EXPECTANCY", false, best, worst, ukrain);
+  const chartFreedom = createDotPlot("#dotplot_freedom", "FREEDOM TO MAKE LIFE CHOICES", false, best, worst, ukrain);
+  const chartGenerosity = createDotPlot("#dotplot_generosity", "GENEROSITY", false, best, worst, ukrain);
+  const chartCorruption = createDotPlot("#dotplot_corruption", "PERCEPTION OF CORRUPTION", false, best, worst, ukrain);
 
-  // SELECT DE ANOS
+  // SELECT DE ANOS - update all charts
   d3.select("#yearSelect").on("change", function() {
     const parts = this.value.split("-").map(Number);
     currentRange = parts.length === 2 ? parts : [parts[0], parts[0]];
-    chart1.update(currentVar, currentRange);
-    chart2.update(currentVar, currentRange);
+    
+    chart1.update("HAPPINESS SCORE", currentRange);
+    chartHappiness.update("HAPPINESS SCORE", currentRange);
+    chartGdp.update("GDP PER CAPITA (Billions)", currentRange);
+    chartSocial.update("SOCIAL SUPPORT", currentRange);
+    chartHealth.update("HEALTHY LIFE EXPECTANCY", currentRange);
+    chartFreedom.update("FREEDOM TO MAKE LIFE CHOICES", currentRange);
+    chartGenerosity.update("GENEROSITY", currentRange);
+    chartCorruption.update("PERCEPTION OF CORRUPTION", currentRange);
   });
 
 });

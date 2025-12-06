@@ -48,12 +48,25 @@ export function createLineChart(width, height, margin, animation = true) {
         .style("pointer-events", "none")
         .style("opacity", 0);
 
-    const x = d3.scaleLinear().domain([2015, 2024]).range([0, width]);
+    const xOriginal = d3.scaleLinear().domain([2015, 2024]).range([0, width]);
+    const x = xOriginal.copy();
     const y = d3.scaleLinear().domain([0, 1]).range([height, 0]);
     const color = d3.scaleOrdinal().domain(parameters).range(d3.schemeCategory10);
 
+    svg.append("defs").append("clipPath")
+        .attr("id", "line-clip")
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("x", 0)
+        .attr("y", 0);
+
+    const chartArea = svg.append("g")
+        .attr("class", "chart-area")
+        .attr("clip-path", "url(#line-clip)");
+
     // Eixos
-    svg.append("g")
+    const xAxis = svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
 
@@ -61,9 +74,14 @@ export function createLineChart(width, height, margin, animation = true) {
         .call(d3.axisLeft(y).tickSize(0).tickFormat(''))
         .select(".domain").remove();
 
+    const brush = d3.brushX()
+        .extent([[0, 0], [width, height]])
+        .on("end", updateChart);
+
     const activeParams = {};
     const lines = [];
     const pointsGroups = [];
+    let chartData = [];
 
     function cssSafe(str) {
         return str.replace(/\s+/g, "_").replace(/[()]/g, "_");
@@ -85,18 +103,83 @@ export function createLineChart(width, height, margin, animation = true) {
         d3.select(`#legend-${cssSafe(param)} rect`).style("opacity", show ? 1 : 0.3);
     }
 
+    function yearTicks() {
+        const [d0, d1] = x.domain();
+        const span = d1 - d0;
+        const step = Math.max(1, Math.ceil(span / 8));
+        const start = Math.floor(d0 / step) * step;
+        const end = Math.ceil(d1 / step) * step;
+        const ticks = [];
+        for (let t = start; t <= end; t += step) {
+            ticks.push(t);
+        }
+        return ticks;
+    }
+
+    function redraw(duration = 250) {
+        lines.forEach(({ path, param }) => {
+            path.transition().duration(duration)
+                .attr("d", d3.line()
+                    .x(d => x(d.YEAR))
+                    .y(d => y(d[param]))(chartData));
+        });
+
+        pointsGroups.forEach(({ group, param }) => {
+            group.selectAll("circle")
+                .transition().duration(duration)
+                .attr("cx", d => x(d.YEAR))
+                .attr("cy", d => y(d[param]));
+        });
+
+        xAxis.transition().duration(duration)
+            .call(d3.axisBottom(x)
+                .tickValues(yearTicks())
+                .tickFormat(d3.format("d"))
+            );
+    }
+
+    function resetZoom() {
+        x.domain(xOriginal.domain());
+        redraw();
+    }
+
+    function updateChart(event) {
+        const selection = event.selection;
+        if (!selection) {
+            // Ignore synthetic clear events; double-click resets separately.
+            return;
+        }
+
+        const [x0, x1] = selection.map(xOriginal.invert);
+        if (x0 === x1) {
+            chartArea.select(".brush").call(brush.move, null);
+            return;
+        }
+
+        const domain = xOriginal.domain();
+        x.domain([
+            Math.max(domain[0], x0),
+            Math.min(domain[1], x1)
+        ]);
+        redraw();
+
+        // Clear the brush without triggering a reset; ignore ensuing synthetic events.
+        chartArea.select(".brush").call(brush.move, null);
+    }
+
     d3.csv("dataset-ukrain.csv").then(data => {
         data.forEach(d => {
             d.YEAR = +d.YEAR;
             parameters.forEach(p => d[p] = +d[p]);
         });
+        chartData = data;
 
         parameters.forEach((param, i) => {
             activeParams[param] = false;
             const safe = cssSafe(param);
             const raw = param.replace(" MIN-MAX NORMALIZATION", "");
 
-            const dotGroup = svg.append("g").attr("class", `dots-${safe}`);
+            const dotGroup = chartArea.append("g").attr("class", `dots-${safe}`);
             dotGroup.selectAll("circle")
                 .data(data)
                 .enter()
@@ -115,7 +198,7 @@ export function createLineChart(width, height, margin, animation = true) {
                 .on("mousemove", event => tooltip.style("left", event.pageX + 10 + "px").style("top", event.pageY + 10 + "px"))
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
-            const line = svg.append("path")
+            const line = chartArea.append("path")
                 .datum(data)
                 .attr("class", `line-${safe}`)
                 .attr("fill", "none")
@@ -132,6 +215,12 @@ export function createLineChart(width, height, margin, animation = true) {
             lines.push({ path: line, param });
             pointsGroups.push({ group: dotGroup, param });
         });
+
+        chartArea.append("g")
+            .attr("class", "brush")
+            .call(brush);
+
+        svg.on("dblclick", resetZoom);
 
         // LEGENDA HORIZONTAL ABAIXO
         const legendContainer = svg.append("g")
