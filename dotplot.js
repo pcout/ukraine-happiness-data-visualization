@@ -172,7 +172,7 @@ Promise.all([
   let currentRange = [2015, 2024];
 
   // Create chart1 (ranking with first variable)
-  const chart1 = createDotPlot("#dotplot_chart1", "HAPPINESS SCORE", true, best, worst, ukrain);
+  const chart1 = createDotPlot("#dotplot_chart1", "RANKING", true, best, worst, ukrain);
 
   // Create all 7 variable charts
   const chartHappiness = createDotPlot("#dotplot_happiness", "HAPPINESS SCORE", false, best, worst, ukrain);
