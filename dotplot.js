@@ -113,6 +113,26 @@ function createDotPlot(containerId, columnName, yDescending = true, bestData, wo
 
     groupsMerged.each(function(d) {
       const group = d3.select(this);
+      
+      // Draw lines first (so they appear below circles)
+      const validPoints = d.vals
+        .filter(v => !isNaN(v.value))
+        .map(v => ({x: x.bandwidth()/2, y: y(v.value)}))
+        .sort((a,b)=>a.y-b.y);
+
+      const path = group.selectAll("path.line").data(validPoints.length >= 2 ? [validPoints] : []);
+      path.exit().remove();
+
+      path.enter().append("path")
+        .attr("class", "line")
+        .merge(path)
+        .transition().duration(800)
+        .attr("d", d3.line().x(p => p.x).y(p => p.y))
+        .attr("stroke", "#666")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+
+      // Draw circles after (so they appear on top)
       const circles = group.selectAll("circle").data(d.vals);
       circles.exit().remove();
 
@@ -134,23 +154,6 @@ function createDotPlot(containerId, columnName, yDescending = true, bestData, wo
             .style("top", event.pageY - 20 + "px");
         })
         .on("mouseout", () => tooltip.style("opacity", 0));
-
-      const validPoints = d.vals
-        .filter(v => !isNaN(v.value))
-        .map(v => ({x: x.bandwidth()/2, y: y(v.value)}))
-        .sort((a,b)=>a.y-b.y);
-
-      const path = group.selectAll("path.line").data(validPoints.length >= 2 ? [validPoints] : []);
-      path.exit().remove();
-
-      path.enter().append("path")
-        .attr("class", "line")
-        .merge(path)
-        .transition().duration(800)
-        .attr("d", d3.line().x(p => p.x).y(p => p.y))
-        .attr("stroke", "#666")
-        .attr("stroke-width", 1)
-        .attr("fill", "none");
     });
   }
 
