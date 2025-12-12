@@ -70,10 +70,16 @@ export function createLineChart(width, height, margin, animation = true) {
         const y = d3.scaleLinear().domain([0, 1]).range([chartHeight, 0]);
     const color = d3.scaleOrdinal().domain(parameters).range(d3.schemeCategory10);
 
-    // Remove clipPath to avoid any accidental cutting by the canvas
+    // Add clipPath to hide anything outside the chart area
+    svg.append("defs").append("clipPath")
+        .attr("id", "line-clip")
+        .append("rect")
+        .attr("width", chartWidth)
+        .attr("height", chartHeight);
 
     const chartArea = svg.append("g")
-        .attr("class", "chart-area");
+        .attr("class", "chart-area")
+        .attr("clip-path", "url(#line-clip)");
 
     // Eixos
     const xAxis = svg.append("g")
@@ -86,7 +92,6 @@ export function createLineChart(width, height, margin, animation = true) {
 
     const brush = d3.brushX()
         .extent([[0, 0], [chartWidth, chartHeight]])
-        .on("brush", updateChart)
         .on("end", updateChart);
 
     const activeParams = {};
@@ -161,16 +166,17 @@ export function createLineChart(width, height, margin, animation = true) {
             return;
         }
 
-        const [x0, x1] = selection.map(xOriginal.invert);
+        // Map brush pixel selection to year values using xOriginal (which has the full range)
+        const [x0Px, x1Px] = selection;
+        const x0 = xOriginal.invert(x0Px);
+        const x1 = xOriginal.invert(x1Px);
+        
         if (x0 === x1) {
             return;
         }
 
-        const domain = xOriginal.domain();
-        x.domain([
-            Math.max(domain[0], x0),
-            Math.min(domain[1], x1)
-        ]);
+        // Update x domain to the selected range
+        x.domain([x0, x1]);
         redraw();
     }
 
