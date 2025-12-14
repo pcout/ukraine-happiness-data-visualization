@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="description" content="War and Wellbeing in Ukraine . A Data Visualization Dashboard" />
+    <meta charset="utf-8" />
+    <title>War and Wellbeing in Ukraine . A Data Visualization Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+     <meta name="author" content="">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3/dist/css/uikit.min.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.20.7/dist/css/uikit.min.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.8.1/dist/nouislider.min.css">
+    <link rel="stylesheet" href="custom-uikit-css.css">
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3/dist/js/uikit-icons.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@15.8.1/dist/nouislider.min.js"></script>
+    
+</head>
+    <body>
+        <div class="uk-background-primary uk-position-z-index-high" uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky;">
+            <nav class="uk-navbar-container uk-navbar-transparent uk-light">
+                <div class="uk-container uk-container-medium">
+                    <div uk-navbar>
+                        <div class="uk-navbar-left">
+                            <div class="uk-navbar-item">
+                                <img src="logo_branco_uc_dei.png" width="400" height="" alt="dei.uc.pt">
+                            </div>
+                        </div>
+                        
+                        <div class="uk-navbar-right">
+                                <div class="uk-navbar-item">
+                                    <span class="uk-text-right">Information Visualization<br>Multimedia Design Master's Degree</span>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <div id="intro" class="uk-section uk-section-medium uk-section-secondary ">
+            <div class="uk-container uk-container-medium uk-text-center">
+                <h1 class="uk-heading-medium uk-margin-small-bottom uk-text-bold serif-type">War and Wellbeing in Ukraine</h1>
+            </div>
+            <div class="uk-container uk-container-xsmall uk-margin-medium">
+                <h3 class="uk-text-center">Is it possible to be happy with war raging all around?<br>What does happiness even mean for a country that has been living at the epicenter of geopolitical turmoil for several years?</h3>
+            </div>
+            <div class="uk-container uk-container-medium uk-margin-large">
+                <div class="uk-child-width-1-3" uk-grid>
+                    <div class="uk-text-center">
+                        <h2 class="uk-heading-medium uk-text-bold uk-text-muted uk-margin-remove-bottom">45M</h2>
+                        <p class="uk-margin-remove-top">Ukraine Population</p>
+                    </div>
+                    <div class="uk-text-center">
+                        <h2 class="uk-heading-medium uk-text-bold uk-text-muted uk-margin-remove-bottom">76.8%</h2>
+                        <p class="uk-margin-remove-top">Urban Population</p>
+                    </div>
+                    <div class="uk-text-center">
+                        <h2 class="uk-heading-medium uk-text-bold uk-text-muted uk-margin-remove-bottom">41.8</h2>
+                        <p class="uk-margin-remove-top">Median Age</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="timeline" class="uk-section uk-section-xsmall uk-section-default uk-box-shadow-medium" style="border-bottom: 0px solid #bbb;" uk-sticky="offset:80; start: 0; animation: uk-animation-slide-top">
+            <div class="uk-container uk-container-medium">
+                <div id="uikit-slider" class="uk-margin-small-top uk-margin-medium-bottom"></div>
+            </div>
+        </div>
+
+        <div class="uk-container uk-container-large uk-margin-medium-top">
+            <div uk-grid class="uk-grid-medium"> 
+                <div class="uk-width-expand">
+                    
+                    <div id="data-story" class="uk-section uk-section-small uk-section-default uk-padding-remove-bottom uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall uk-margin-small">
+                            <h1 class="serif-type">What is the data telling us ?</h1>
+                            <h3>The most striking insight is that <span class="uk-text-bold" >happiness scores actually increased</span> immediately following the full-scale invasion in 2022, contradicting the intuitive expectation that war leads to immediate despair. In 2021 (pre-invasion), Ukraine's Happiness Score was 4.87. In 2022 (invasion year), it rose to 5.08. A <span class="uk-text-bold">+4.3% increase</span> in the happiness index during the first year of the full-scale war.</h3>
+                        </div>
+                        <div class="uk-container uk-container-large">
+                            <div class="uk-text-center">
+
+                                <div class="legend uk-text-center uk-margin-medium-top uk-margin-small-bottom">
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #3498db;"></div>2015</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #9b59b6;"></div>2016</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #00bcd4;"></div>2017</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #e91e63;"></div>2018</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #34495e;"></div>2019</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #ff6b6b;"></div>2020</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #4ecdc4;"></div>2021</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #a29bfe;"></div>2022</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #fd79a8;"></div>2023</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #0984e3;"></div>2024</span>
+                                </div>
+
+                            </div>
+                            <div class="uk-width-1-1">
+                                <div id="radarcolors" class="radarChart"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="break-down" class="uk-section uk-section-small uk-section-default uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall uk-margin-large">
+                            <h1 class="serif-type">Let's break it down</h1>
+                            <h3>Generosity scores skyrocketed from 0.33 in 2021 to 0.71 in 2024.<br>A massive <span class="uk-text-bold">+115% increase</span> in generosity over three years. This jump represents the millions of Ukrainians who mobilized to volunteer, donate to the army, and host displaced neighbors. While 2022 showed resilience, the data for 2024 indicates that the psychological burden is taking its toll.  By 2024, data shows a decrease in those identifying as "happy" - <span class="uk-text-bold">dropping to 58%</span> - attributed to economic pressures, separation from families, and the prolonged nature of the conflict.</h3>
+                        </div>
+                        <div class="uk-container uk-container-large">
+                            
+                            <div class="uk-child-width-1-2 uk-grid-collapse" uk-grid>
+                            <div>
+                                <h5 class="uk-text-center">Happiness Score</h5>
+                                <div id="radar-happiness"></div>
+                            </div>
+                            <div>
+                                <h5 class="uk-text-center">GDP per capita</h5>
+                                <div id="radar-gdp"></div>
+                            </div>
+                            <div>
+                                <h5 class="uk-text-center">Social Support</h5>
+                                <div id="radar-social-support"></div>
+                            </div>
+                            <div>
+                                <h5 class="uk-text-center">Healthy Life Expectancy</h5>
+                                <div id="radar-healthy-life"></div>
+                            </div>
+                            <div>
+                                <h5 class="uk-text-center">Freedom to Make Life Choices</h5>
+                                <div id="radar-freedom"></div>
+                            </div>
+                            <div>
+                                <h5 class="uk-text-center">Generosity</h5>
+                                <div id="radar-generosity"></div>
+                            </div>
+                            <div>
+                                <h5 class="uk-text-center">Perception of Corruption</h5>
+                                <div id="radar-corruption"></div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="distribution" class="uk-section uk-section-small uk-section-default uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall">
+                            <h1 class="serif-type">Can you see ?</h1>
+                             <h3>When Ukrainians felt they had agency and control over their lives, their happiness rose, regardless of the economic situation. This freedom metric surged during the war years. This suggests that the fight for national independence gave people a <span class="uk-text-bold">profound sense of existential freedom and purpose</span>, which sustained their morale even as physical restrictions increased.</h3>
+                        </div>
+                        <div class="uk-container uk-container-medium">
+                            <div class="uk-flex uk-flex-center uk-margin-large-top uk-margin-medium-bottom">
+                                <div class="uk-margin-right"><span>Low</span></div>
+                                <div class="legend-color" style="background: linear-gradient(to right, #f7fbff, #deebf7, #c6dbef, #9ecae1, #6baed6, #4292c6, #2171b5, #08519c, #08306b); width: 400px; height: 30px; border-radius: 3px;"></div>
+                                <div class="uk-margin-left"><span>High</span></div>
+                            </div>
+                            <div class="uk-width-expand">
+                                <div id="heatmap-container"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="customize" class="uk-section uk-section-small uk-section-default uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall">
+                            <h1 class="serif-type">Customize your experience</h1>
+                            <h3>Generosity, Freedom, and Corruption. These three parameters moved in a distinct pattern during the war years (2022-2024). As people felt more "free", they became more generous. This is visible in the volunteerism boom. The data shows a moderate positive link between Perception of Corruption and Happiness. This is unusual but likely reflects the wartime reality where corruption scandals became more visible (higher perception) because the public demanded higher accountability from leaders during the war, coincident with the period of high national unity.
+                            </h3>
+                        </div>
+                        <div class="uk-container uk-container-large uk-margin-medium">
+                            <div class="uk-text-center">
+                                <div class="legend uk-text-center uk-margin-medium">
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #69b3a2;"></div>Top Ranked</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #FFD700;"></div>Ukraine</span>
+                                    <span class="legend-item"><div class="legend-color" style="background-color: #d95f5f;"></div>Lowest Ranked</span>
+                                </div>
+
+                            </div>
+
+                            <form class="">
+                                <div class="controls uk-form-control uk-child-width-1-3 uk-grid-small uk-margin-large-bottom" uk-grid>
+                                    <div>
+                                        <label class="uk-form-label" for="selectX">X Axis</label>
+                                        <select class="uk-select" id="selectX"></select>
+                                    </div>
+                                    <div>
+                                        <label class="uk-form-label" for="selectY">Y Axis</label>
+                                        <select class="uk-select" id="selectY"></select>
+                                    </div>
+                                    <div>
+                                        <label class="uk-form-label" for="selectSize">Size</label>
+                                        <select class="uk-select" id="selectSize"></select>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div class="uk-width-1-1">
+                                <div id="bubble-chart-container" class=""></div>
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <div id="europe-context" class="uk-section uk-section-small uk-section-default uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall uk-margin-large">
+                            <h1 class="serif-type">Ukraine in the Europe context</h1>
+                            <h3>Ukraine occupies a unique position. While its economic and happiness metrics often align with the "worst" ranked countries, it demonstrates world-class resilience in social metrics, outperforming even the "best" countries in Generosity. Over the full 2015-2024 period, Ukraine's median happiness (4.62) is slightly lower than the median of the "worst" group (4.80). However, this score notably <span class="uk-text-bold">trended upward in 2022</span> despite the invasion, showing a defiance of these long-term averages.</h3>
+                        </div>
+                        <div class="uk-container uk-container-large">
+                            <div class="uk-child-width-1-3 uk-grid-small" uk-grid>
+                                <div>
+                                    <div class="uk-text-center">
+                                        <h5 class="serif-type">Highest Ranked European Countries</h5>
+                                    </div>
+                                    <div class="">
+                                        <div id="best-chart" class=""></div>
+                                    </div>
+                                </div>
+                            
+                                <div>
+                                    <div class="uk-text-center">
+                                        <h5 class="serif-type">Ukraine</h5>
+                                    </div>
+                                    <div class="">
+                                        <div id="ukraine-chart" class=""></div>
+                                    </div>
+                                </div>
+                            
+                                <div>
+                                    <div class="uk-text-center">
+                                        <h5 class="serif-type">Lowest Ranked European Countries</h5>
+                                    </div>
+                                    <div class="">
+                                        <div id="worst-chart" class=""></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="comparison" class="uk-section uk-section-small uk-section-default uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall">
+                            <h1 class="serif-type">How does Ukraine compares</h1>
+                            <h3>Despite the war, Ukrainians feel a level of social support that is much closer to the world's happiest nations than to the struggling ones. Ukraine sits roughly <span class="uk-text-bold">70%</span> of the way toward the "best" standard. This suggests that interpersonal networks and community aid are functioning at a near-Western European level, acting as a crucial buffer against the trauma of war.</h3>
+                        </div>
+                        <div class="uk-container uk-container-large uk-margin-large">
+                            <div class="uk-text-center">
+                                
+                                <div class="dot-plot-legend uk-text-center uk-margin-medium">
+                                    <span class="legend-item">
+                                        <div class="legend-color" style="background-color: #69b3a2;"></div>Top Ranked
+                                    </span>
+                                    <span class="legend-item">
+                                        <div class="legend-color" style="background-color: #FFD700;"></div>Ukraine
+                                    </span>
+                                    <span class="legend-item">
+                                        <div class="legend-color" style="background-color: #d95f5f;"></div>Lowest Ranked
+                                    </span>
+                                </div>
+
+                            </div>
+                            
+                            <div class="uk-child-width-1-2" uk-grid>
+                                <div>
+                                    <h5 class="uk-text-center">Ranking</h5>
+                                    <div id="dotplot_chart1" class=""></div>
+                                </div>
+                                <div>
+                                    <h5 class="uk-text-center">Happiness Score</h5>
+                                    <div id="dotplot_happiness"></div>
+                                </div>
+
+                                <div>
+                                    <h5 class="uk-text-center">GDP per Capita</h5>
+                                    <div id="dotplot_gdp"></div>
+                                </div>
+                                <div>
+                                    <h5 class="uk-text-center">Social Support</h5>
+                                    <div id="dotplot_social"></div>
+                                </div>
+                                <div>
+                                    <h5 class="uk-text-center">Healthy Life Expectancy</h5>
+                                    <div id="dotplot_health"></div>
+                                </div>
+                                <div>
+                                    <h5 class="uk-text-center">Freedom to Make Life Choices</h5>
+                                    <div id="dotplot_freedom"></div>
+                                </div>
+                                <div>
+                                    <h5 class="uk-text-center">Generosity</h5>
+                                    <div id="dotplot_generosity"></div>
+                                </div>
+                                <div>
+                                    <h5 class="uk-text-center">Perception of Corruption</h5>
+                                    <div id="dotplot_corruption"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                    <div id="paradox" class="uk-section uk-section-small uk-section-default uk-margin-bottom">
+                        <div class="uk-container uk-container-xsmall">
+                            <h1 class="serif-type">The paradox</h1>
+                            <h3>Ukraine beats the european top ranked countries in Generosity.<br>While the "best" (e.g., Finland, Denmark) and "worst" (e.g., Afghanistan, Lebanon) countries have similar median generosity scores, Ukraine stands out as the leader. This quantitative evidence supports the <span class="uk-text-bold">benevolence boom observed during the war</span>. Over the full 2015-2024 period, Ukraine's median happiness (4.62) is slightly lower than the median of the "worst" group (4.80).</h3>
+                        </div>
+                        <div class="uk-container uk-container-large uk-margin-medium">
+                            <div class="legend uk-text-center">
+                                <h4>All Years Average</h4>
+                                <span class="legend-item"><div class="legend-color" style="background-color: #69b3a2;"></div>Best Countries</span>
+                                <span class="legend-item"><div class="legend-color" style="background-color: #FFD700;"></div>Ukraine</span>
+                                <span class="legend-item"><div class="legend-color" style="background-color: #d95f5f;"></div>Worst Countries</span>
+                            </div>
+                            <div id="circular-barplot"></div>
+                        </div>
+                    </div>
+                    
+                </div> 
+                <div class="uk-width-1-4">
+                    <div uk-sticky="offset: 220; bottom: #paradox">
+                        <ul class="uk-nav uk-nav-default" uk-scrollspy-nav="closest: li; scroll: true; offset: 120">
+                            <li><a href="#data-story">What is the data telling us ? </a></li>
+                            <li><a href="#break-down">Let's break it down</a></li>
+                            <li><a href="#distribution">Can you see ?</a></li>
+                            <li><a href="#customize">Customize your experience</a></li>
+                            <li><a href="#europe-context">Ukraine in the Europe context</a></li>
+                            <li><a href="#comparison">How does Ukraine compares</a></li>
+                            <li><a href="#paradox">The Paradox</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="uk-section uk-section-medium uk-section-secondary">
+            <div class="uk-container uk-container-xsmall">
+                <h3 class="uk-text-italic">The current population of Ukraine is <span class="uk-text-bold">39,463,214</span> as of Saturday, December 13, 2025, based on Worldometer's elaboration of the latest United Nations data.</h3>
+                <h3 class="uk-text-italic">Ukraine 2025 population is estimated at <span class="uk-text-bold">38,980,376</span> people at mid-year.</h3>
+            </div>
+        </div>
+
+        <div class="uk-section uk-section-medium uk-section-secondary">
+            <hr>
+            <div class="uk-container uk-container-xsmall">
+                <span class="uk-text-italic">Ana Almeida . 2022231497</span><br>
+                <span class="uk-text-italic">Pedro Coutinho . 1992010310</span> 
+                <p>December 2025</p>
+            </div>
+        </div>
+
+    <script src="custom.js"></script>
+    <script type="module" src="radarChart-colors.js"></script>
+    <script type="module" src="dotplot.js"></script>
+    <script type="module" src="linechart2.js"></script>
+    <script src="heatmapChart-sidenav.js"></script>
+    <script src="best_barplot.js"></script>
+    <script src="ukraine_barplot.js"></script>
+    <script src="worst_barplot.js"></script>
+    <script src="bubble_chart.js"></script>
+    <script src="circular-barplot.js"></script>
+    <script src="sunburst.js"></script>
+    </body>
+</html>
